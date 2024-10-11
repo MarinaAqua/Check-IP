@@ -1,103 +1,124 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengecekan Proxy IP</title>
+    <title>Proxy Status Checker</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f0f0f0;
             margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
+            background-color: #fff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
         }
-        label {
-            display: block;
-            margin: 10px 0 5px;
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
         }
         input[type="text"] {
             width: 100%;
             padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
         }
         button {
             width: 100%;
             padding: 10px;
-            background-color: #5cb85c;
+            background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
-            background-color: #4cae4c;
+            background-color: #0056b3;
         }
         .result {
             margin-top: 20px;
-            background: #e7f3fe;
-            padding: 15px;
-            border-left: 5px solid #2196F3;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            display: none;
+        }
+        .result p {
+            margin: 0;
+            padding: 5px;
+        }
+        .status-active {
+            color: green;
+        }
+        .status-inactive {
+            color: red;
+        }
+        .error {
+            color: red;
+            text-align: center;
         }
     </style>
-    <script>
-        async function checkProxy() {
-            const input = document.getElementById('proxyInput').value;
-            const [ip, port] = input.split(':');
-            if (!ip || !port) {
-                document.getElementById('result').innerText = 'Format tidak valid. Gunakan ip:port.';
-                return;
-            }
-
-            const url = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                // Cek apakah respons memiliki data yang valid
-                if (data && data.status !== undefined) {
-                    const result = `
-                        <strong>IP Proxy:</strong> ${data.ip}<br>
-                        <strong>Port:</strong> ${data.port}<br>
-                        <strong>ASN:</strong> ${data.asn}<br>
-                        <strong>ISP:</strong> ${data.isp}<br>
-                        <strong>Negara:</strong> ${data.country}<br>
-                        <strong>Status Aktif:</strong> ${data.status ? 'Aktif' : 'Mati'}
-                    `;
-                    document.getElementById('result').innerHTML = result;
-                } else {
-                    document.getElementById('result').innerText = 'Data tidak valid.';
-                }
-            } catch (error) {
-                document.getElementById('result').innerText = 'Terjadi kesalahan: ' + error.message;
-            }
-        }
-    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>Pengecekan Status Proxy IP</h1>
-        <label for="proxyInput">Masukkan IP Proxy (format: ip:port):</label>
-        <input type="text" id="proxyInput" placeholder="Contoh: 192.168.1.1:8080" required>
-        <button onclick="checkProxy()">Cek Proxy</button>
-        <h2>Hasil:</h2>
-        <div class="result" id="result"></div>
-    </div>
+
+<div class="container">
+    <h2>Proxy Status Checker</h2>
+    <input type="text" id="proxyInput" placeholder="Masukkan IP:Port">
+    <button onclick="checkProxy()">Cek Status</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    const apiUrl = 'https://cfport-1-n2942152.deta.app/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true';
+
+    async function checkProxy() {
+        const proxyInput = document.getElementById('proxyInput').value;
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = ''; // Reset result
+        resultDiv.style.display = 'none';
+
+        if (!proxyInput.includes(':')) {
+            resultDiv.innerHTML = '<p class="error">Format IP dan port tidak valid! Gunakan format IP:Port.</p>';
+            resultDiv.style.display = 'block';
+            return;
+        }
+
+        const [ip, port] = proxyInput.split(':');
+        
+        try {
+            const response = await fetch(apiUrl.replace('{ip}', ip).replace('{port}', port));
+            const data = await response.json();
+
+            if (data) {
+                resultDiv.innerHTML = `
+                    <p><strong>IP:</strong> ${data.ip || ip}</p>
+                    <p><strong>ASN:</strong> ${data.asn || 'N/A'}</p>
+                    <p><strong>ISP:</strong> ${data.isp || 'N/A'}</p>
+                    <p><strong>ORG:</strong> ${data.org || 'N/A'}</p>
+                    <p><strong>Country:</strong> ${data.country || 'N/A'}</p>
+                    <p><strong>Status Proxy:</strong> <span class="${data.active ? 'status-active' : 'status-inactive'}">${data.active ? 'Active' : 'Inactive'}</span></p>
+                    <p><strong>Warp:</strong> ${data.warp || 'off'}</p>
+                `;
+            } else {
+                resultDiv.innerHTML = '<p class="error">Gagal memeriksa status proxy. Coba lagi nanti.</p>';
+            }
+
+        } catch (error) {
+            resultDiv.innerHTML = '<p class="error">Kesalahan terjadi saat memeriksa proxy. Periksa konsol untuk lebih detail.</p>';
+        }
+
+        resultDiv.style.display = 'block';
+    }
+</script>
+
 </body>
 </html>
