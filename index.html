@@ -40,26 +40,23 @@
         button:hover {
             background-color: #4cae4c;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        .result-container {
+            background-color: white;
+            border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+            max-width: 400px;
+            margin: 20px auto;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: center;
+        .result-container p {
+            margin: 8px 0;
+            font-size: 16px;
         }
-        th {
-            background-color: #5cb85c;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
+        .result-container span {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
         }
     </style>
 </head>
@@ -71,19 +68,7 @@
         <button type="submit">Cek</button>
     </form>
 
-    <table id="resultTable">
-        <thead>
-            <tr>
-                <th>IP</th>
-                <th>Port</th>
-                <th>Organisasi</th>
-                <th>Kota</th>
-                <th>Negara</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div id="resultContainer" class="result-container"></div>
 
     <script>
         const apiKey = '02b4a2362c5147ec9996da7d6ceccd4c'; // Ganti dengan kunci API Anda
@@ -92,8 +77,8 @@
             event.preventDefault();
             const ipPort = document.getElementById('ipPort').value;
             const [ip, port] = ipPort.split(':');
-            const resultTableBody = document.getElementById('resultTable').querySelector('tbody');
-            resultTableBody.innerHTML = '';
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = '';
 
             if (!ip || !port) {
                 alert('Format IP:Port tidak valid.');
@@ -101,7 +86,6 @@
             }
 
             try {
-                // Mengambil informasi dari API ipgeolocation.io
                 const apiUrl = `https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}&ip=${ip}`;
                 const response = await fetch(apiUrl);
                 const data = await response.json();
@@ -110,25 +94,26 @@
                 const org = data.organization || 'N/A';
                 const city = data.city || 'N/A';
                 const country = data.country_name || 'N/A';
+                const countryIso = data.country_code2 || 'N/A';
+                const state = data.state_prov || 'N/A';
+                const asn = data.asn || 'N/A';
 
-                resultTableBody.innerHTML += `
-                    <tr>
-                        <td>${ip}</td>
-                        <td>${port}</td>
-                        <td>${org}</td>
-                        <td>${city}</td>
-                        <td>${country}</td>
-                        <td>${status}</td>
-                    </tr>
+                resultContainer.innerHTML = `
+                    <p><span>IP:</span> ${ip}</p>
+                    <p><span>COUNTRY:</span> ${country}</p>
+                    <p><span>COUNTRY ISO:</span> ${countryIso}</p>
+                    <p><span>STATE:</span> ${state}</p>
+                    <p><span>CITY:</span> ${city}</p>
+                    <p><span>ASN:</span> ${asn}</p>
+                    <p><span>ORGANIZATION:</span> ${org}</p>
+                    <p><span>Status Proxy:</span> ${status}</p>
                 `;
             } catch (error) {
-                resultTableBody.innerHTML += `
-                    <tr>
-                        <td>${ip}</td>
-                        <td>${port}</td>
-                        <td colspan="4">Error: ${error.message}</td>
-                        <td>False</td>
-                    </tr>
+                resultContainer.innerHTML = `
+                    <p><span>IP:</span> ${ip}</p>
+                    <p><span>Port:</span> ${port}</p>
+                    <p class="error">Error: ${error.message}</p>
+                    <p><span>Status Proxy:</span> False</p>
                 `;
             }
         });
