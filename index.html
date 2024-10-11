@@ -3,134 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxy Status Checker</title>
+    <title>Pengecekan Proxy IP</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
         }
         .container {
-            background-color: #fff;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
+        label {
+            display: block;
+            margin: 10px 0 5px;
         }
         input[type="text"] {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         button {
             width: 100%;
             padding: 10px;
-            background-color: #007bff;
+            background-color: #5cb85c;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #4cae4c;
         }
         .result {
             margin-top: 20px;
-            display: none;
-        }
-        .result p {
-            margin: 0;
-            padding: 5px;
-        }
-        .status-active {
-            color: green;
-        }
-        .status-inactive {
-            color: red;
-        }
-        .error {
-            color: red;
-            text-align: center;
+            background: #e7f3fe;
+            padding: 15px;
+            border-left: 5px solid #2196F3;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>Proxy Status Checker</h2>
-    <input type="text" id="proxyInput" placeholder="Masukkan IP:Port">
-    <button onclick="checkProxy()">Cek Status</button>
-    <div class="result" id="result"></div>
-</div>
-
-<script>
-    const apiUrls = [
-        'https://proxyip.edtunnel.best/api?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true',
-        'https://cfport-1-n2942152.deta.app/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true',
-        'https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true'
-    ];
-
-    async function checkProxy() {
-        const proxyInput = document.getElementById('proxyInput').value;
-        const resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = ''; // Reset result
-        resultDiv.style.display = 'none';
-
-        if (!proxyInput.includes(':')) {
-            resultDiv.innerHTML = '<p class="error">Format IP dan port tidak valid! Gunakan format IP:Port.</p>';
-            resultDiv.style.display = 'block';
-            return;
-        }
-
-        const [ip, port] = proxyInput.split(':');
-        
-        try {
-            // Fetch API dari setiap endpoint
-            const apiResponses = await Promise.all(apiUrls.map(url => 
-                fetch(url.replace('{ip}', ip).replace('{port}', port))
-                    .then(res => res.json())
-                    .catch(() => null) // Catch error dan return null
-            ));
-
-            const validResponse = apiResponses.find(res => res && typeof res === 'object');
-
-            if (validResponse) {
-                const { active, ip: responseIp, asn, isp, org, country, warp } = validResponse;
-
-                resultDiv.innerHTML = `
-                    <p><strong>IP:</strong> ${responseIp || ip}</p>
-                    <p><strong>ASN:</strong> ${asn || 'N/A'}</p>
-                    <p><strong>ISP:</strong> ${isp || 'N/A'}</p>
-                    <p><strong>ORG:</strong> ${org || 'N/A'}</p>
-                    <p><strong>Country:</strong> ${country || 'N/A'}</p>
-                    <p><strong>Status Proxy:</strong> <span class="${active ? 'status-active' : 'status-inactive'}">${active ? 'Active' : 'Inactive'}</span></p>
-                    <p><strong>Warp:</strong> ${warp || 'off'}</p>
-                `;
-            } else {
-                resultDiv.innerHTML = '<p class="error">Tidak ada respons valid dari API. Coba lagi nanti.</p>';
+    <script>
+        async function checkProxy() {
+            const input = document.getElementById('proxyInput').value;
+            const [ip, port] = input.split(':');
+            if (!ip || !port) {
+                document.getElementById('result').innerText = 'Format tidak valid. Gunakan ip:port.';
+                return;
             }
 
-        } catch (error) {
-            resultDiv.innerHTML = '<p class="error">Terjadi kesalahan. Coba lagi nanti.</p>';
+            const url = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Cek apakah respons memiliki data yang valid
+                if (data && data.status !== undefined) {
+                    const result = `
+                        <strong>IP Proxy:</strong> ${data.ip}<br>
+                        <strong>Port:</strong> ${data.port}<br>
+                        <strong>ASN:</strong> ${data.asn}<br>
+                        <strong>ISP:</strong> ${data.isp}<br>
+                        <strong>Negara:</strong> ${data.country}<br>
+                        <strong>Status Aktif:</strong> ${data.status ? 'Aktif' : 'Mati'}
+                    `;
+                    document.getElementById('result').innerHTML = result;
+                } else {
+                    document.getElementById('result').innerText = 'Data tidak valid.';
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = 'Terjadi kesalahan: ' + error.message;
+            }
         }
-
-        resultDiv.style.display = 'block';
-    }
-</script>
-
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Pengecekan Status Proxy IP</h1>
+        <label for="proxyInput">Masukkan IP Proxy (format: ip:port):</label>
+        <input type="text" id="proxyInput" placeholder="Contoh: 192.168.1.1:8080" required>
+        <button onclick="checkProxy()">Cek Proxy</button>
+        <h2>Hasil:</h2>
+        <div class="result" id="result"></div>
+    </div>
 </body>
 </html>
