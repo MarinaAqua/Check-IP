@@ -113,13 +113,13 @@
                 const boilingFrameData = await boilingFrameResponse.json();
 
                 // Tampilkan hasil
-                const status = geoData.ip ? 'True' : 'False';
-                const org = geoData.organization || 'N/A';
-                const city = geoData.city || 'N/A';
-                const country = geoData.country_name || 'N/A';
-                const countryIso = geoData.country_code2 || 'N/A';
-                const state = geoData.state_prov || 'N/A';
-                const asn = ipInfoData.org || 'N/A';
+                const status = Data.ip ? 'True' : 'False';
+                const org = Data.organization || 'N/A';
+                const city = Data.city || 'N/A';
+                const country = Data.country_name || 'N/A';
+                const countryIso = Data.country_code2 || 'N/A';
+                const state = Data.state_prov || 'N/A';
+                const asn = Data.asn || 'N/A';
 
                 // Data dari API lain
                 const edtunnelStatus = edTunnelData.status || 'N/A';
