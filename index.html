@@ -101,9 +101,13 @@
                     if (res.ok) {
                         return res.json();
                     } else {
+                        console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`); // Log error
                         throw new Error('Gagal mengambil data');
                     }
-                }).catch(() => null)
+                }).catch(err => {
+                    console.error('Error in fetch:', err); // Log fetch error
+                    return null;
+                })
             ));
 
             const response = apiResponses.find(res => res); // Ambil response pertama yang valid
