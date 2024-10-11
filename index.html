@@ -88,7 +88,6 @@
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'none'; // Sembunyikan hasil sebelumnya
 
-            // Memastikan input sesuai format IP:Port
             if (!proxyInput.includes(':')) {
                 resultDiv.innerHTML = '<p style="color: red;">Format IP dan port tidak valid!</p>';
                 resultDiv.style.display = 'block';
@@ -100,34 +99,36 @@
             try {
                 // Mencoba mem-fetch data dari setiap API
                 const apiResponses = await Promise.all(apiUrls.map(url => 
-                    fetch(url.replace('{ip}', ip).replace('{port}', port)).then(res => {
-                        if (res.ok) {
-                            return res.json();
-                        } else {
-                            console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`); // Log error
-                            throw new Error('Gagal mengambil data dari API');
-                        }
-                    }).catch(err => {
-                        console.error('Error in fetch:', err); // Log fetch error
-                        return null;
-                    })
+                    fetch(url.replace('{ip}', ip).replace('{port}', port))
+                        .then(res => res.json())  // Parsing JSON
+                        .catch(err => {
+                            console.error('Error in fetch:', err);
+                            return null;  // Jika fetch gagal, return null
+                        })
                 ));
 
-                const response = apiResponses.find(res => res); // Ambil response pertama yang valid
+                // Log respons untuk melihat apa yang diterima
+                console.log("API Responses:", apiResponses);
 
-                if (response) {
+                // Ambil respons pertama yang valid
+                const validResponse = apiResponses.find(res => res && typeof res === 'object');
+
+                if (validResponse) {
+                    // Mengatasi respons yang mungkin tidak lengkap
+                    const { ip: responseIp, asn, isp, org, country, active, warp } = validResponse;
+
                     resultDiv.innerHTML = `
                         <p><strong>Input:</strong> ${proxyInput}</p>
-                        <p><strong>IP:</strong> ${response.ip || ip}</p>
-                        <p><strong>ASN:</strong> ${response.asn || 'N/A'}</p>
-                        <p><strong>ISP:</strong> ${response.isp || 'N/A'}</p>
-                        <p><strong>ORG:</strong> ${response.org || 'N/A'}</p>
-                        <p><strong>Country:</strong> ${response.country || 'N/A'}</p>
-                        <p><strong>Status ProxyIP:</strong> <span class="${response.active ? 'status-active' : 'status-inactive'}">${response.active ? 'Active' : 'Inactive'}</span></p>
-                        <p><strong>Warp:</strong> ${response.warp || 'off'}</p>
+                        <p><strong>IP:</strong> ${responseIp || ip}</p>
+                        <p><strong>ASN:</strong> ${asn || 'N/A'}</p>
+                        <p><strong>ISP:</strong> ${isp || 'N/A'}</p>
+                        <p><strong>ORG:</strong> ${org || 'N/A'}</p>
+                        <p><strong>Country:</strong> ${country || 'N/A'}</p>
+                        <p><strong>Status ProxyIP:</strong> <span class="${active ? 'status-active' : 'status-inactive'}">${active ? 'Active' : 'Inactive'}</span></p>
+                        <p><strong>Warp:</strong> ${warp || 'off'}</p>
                     `;
                 } else {
-                    resultDiv.innerHTML = '<p style="color: red;">Gagal memeriksa status proxy. Coba lagi nanti.</p>';
+                    resultDiv.innerHTML = '<p style="color: red;">Tidak ada respons valid dari API. Coba lagi nanti.</p>';
                 }
 
             } catch (error) {
@@ -135,7 +136,7 @@
                 resultDiv.innerHTML = '<p style="color: red;">Kesalahan terjadi saat memeriksa proxy. Periksa konsol untuk lebih detail.</p>';
             }
 
-            resultDiv.style.display = 'block'; // Tampilkan hasil
+            resultDiv.style.display = 'block';
         }
     </script>
 
