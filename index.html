@@ -17,7 +17,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             max-width: 400px;
-            margin: 50px auto; /* Pusatkan secara horizontal */
+            margin: 50px auto;
         }
         h2 {
             text-align: center;
@@ -96,35 +96,43 @@
             }
 
             const [ip, port] = proxyInput.split(':');
-            const apiResponses = await Promise.all(apiUrls.map(url => 
-                fetch(url.replace('{ip}', ip).replace('{port}', port)).then(res => {
-                    if (res.ok) {
-                        return res.json();
-                    } else {
-                        console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`); // Log error
-                        throw new Error('Gagal mengambil data');
-                    }
-                }).catch(err => {
-                    console.error('Error in fetch:', err); // Log fetch error
-                    return null;
-                })
-            ));
+            
+            try {
+                // Mencoba mem-fetch data dari setiap API
+                const apiResponses = await Promise.all(apiUrls.map(url => 
+                    fetch(url.replace('{ip}', ip).replace('{port}', port)).then(res => {
+                        if (res.ok) {
+                            return res.json();
+                        } else {
+                            console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`); // Log error
+                            throw new Error('Gagal mengambil data dari API');
+                        }
+                    }).catch(err => {
+                        console.error('Error in fetch:', err); // Log fetch error
+                        return null;
+                    })
+                ));
 
-            const response = apiResponses.find(res => res); // Ambil response pertama yang valid
+                const response = apiResponses.find(res => res); // Ambil response pertama yang valid
 
-            if (response) {
-                resultDiv.innerHTML = `
-                    <p><strong>Input:</strong> ${proxyInput}</p>
-                    <p><strong>IP:</strong> ${response.ip || ip}</p>
-                    <p><strong>ASN:</strong> ${response.asn || 'N/A'}</p>
-                    <p><strong>ISP:</strong> ${response.isp || 'N/A'}</p>
-                    <p><strong>ORG:</strong> ${response.org || 'N/A'}</p>
-                    <p><strong>Country:</strong> ${response.country || 'N/A'}</p>
-                    <p><strong>Status ProxyIP:</strong> <span class="${response.active ? 'status-active' : 'status-inactive'}">${response.active ? 'Active' : 'Inactive'}</span></p>
-                    <p><strong>Warp:</strong> ${response.warp || 'off'}</p>
-                `;
-            } else {
-                resultDiv.innerHTML = '<p style="color: red;">Gagal memeriksa status proxy. Coba lagi nanti.</p>';
+                if (response) {
+                    resultDiv.innerHTML = `
+                        <p><strong>Input:</strong> ${proxyInput}</p>
+                        <p><strong>IP:</strong> ${response.ip || ip}</p>
+                        <p><strong>ASN:</strong> ${response.asn || 'N/A'}</p>
+                        <p><strong>ISP:</strong> ${response.isp || 'N/A'}</p>
+                        <p><strong>ORG:</strong> ${response.org || 'N/A'}</p>
+                        <p><strong>Country:</strong> ${response.country || 'N/A'}</p>
+                        <p><strong>Status ProxyIP:</strong> <span class="${response.active ? 'status-active' : 'status-inactive'}">${response.active ? 'Active' : 'Inactive'}</span></p>
+                        <p><strong>Warp:</strong> ${response.warp || 'off'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p style="color: red;">Gagal memeriksa status proxy. Coba lagi nanti.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error during proxy check:', error);
+                resultDiv.innerHTML = '<p style="color: red;">Kesalahan terjadi saat memeriksa proxy. Periksa konsol untuk lebih detail.</p>';
             }
 
             resultDiv.style.display = 'block'; // Tampilkan hasil
