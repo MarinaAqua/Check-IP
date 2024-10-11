@@ -1,75 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proxy IP Status Checker</title>
+    <title>Pengecekan IP Proxy dan ASN</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #eef2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
         }
         .container {
-            background-color: white;
+            background-color: #fff;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             max-width: 400px;
-            width: 100%;
+            margin: 50px auto; /* Pusatkan secara horizontal */
         }
         h2 {
             text-align: center;
+            margin-bottom: 20px;
             color: #333;
         }
         input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 20px;
+            width: 100%;
+            padding: 12px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            box-sizing: border-box;
             font-size: 16px;
+            margin-bottom: 15px;
         }
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
-            font-size: 16px;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
             background-color: #0056b3;
         }
         .result {
-            background-color: #f0f9f4;
-            padding: 15px;
             margin-top: 20px;
-            border-radius: 8px;
-            color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f0f8ff;
+            border: 1px solid #007bff;
+            display: none;
         }
         .result p {
-            margin: 8px 0;
+            margin: 5px 0;
         }
-        .active {
+        .status-active {
             color: green;
+            font-weight: bold;
         }
-        .inactive {
+        .status-inactive {
             color: red;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Check Proxy IP</h2>
-        <input type="text" id="proxyInput" placeholder="Enter Proxy IP:Port (e.g., 192.168.1.1:8080)">
-        <button onclick="checkProxy()">Check Status</button>
+        <h2>Pengecekan IP Proxy dan ASN</h2>
+        <input type="text" id="proxyInput" placeholder="Masukkan IP atau IP:Port">
+        <button onclick="checkProxy()">Cek Status</button>
         <div class="result" id="result"></div>
     </div>
 
@@ -83,56 +86,44 @@
         async function checkProxy() {
             const proxyInput = document.getElementById('proxyInput').value;
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '<p>Checking...</p>';
+            resultDiv.style.display = 'none'; // Sembunyikan hasil sebelumnya
 
-            // Validasi input
-            if (!proxyInput || !proxyInput.includes(':')) {
-                resultDiv.innerHTML = '<p style="color: red;">Please enter a valid proxy IP and port (e.g., 192.168.1.1:8080).</p>';
+            // Memastikan input sesuai format IP:Port
+            if (!proxyInput.includes(':')) {
+                resultDiv.innerHTML = '<p style="color: red;">Format IP dan port tidak valid!</p>';
+                resultDiv.style.display = 'block';
                 return;
             }
 
             const [ip, port] = proxyInput.split(':');
-            if (!ip || !port) {
-                resultDiv.innerHTML = '<p style="color: red;">Please enter both IP and Port.</p>';
-                return;
-            }
-
-            resultDiv.innerHTML = '<p>Checking status for IP: ' + ip + ', Port: ' + port + '...</p>';
-
-            // Loop melalui API untuk memeriksa status proxy
-            let apiResponse = null;
-            for (const apiUrl of apiUrls) {
-                const url = apiUrl.replace('{ip}', ip).replace('{port}', port);
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    
-                    if (data) {
-                        apiResponse = data;
-                        break; // Berhenti setelah mendapatkan respons dari API
+            const apiResponses = await Promise.all(apiUrls.map(url => 
+                fetch(url.replace('{ip}', ip).replace('{port}', port)).then(res => {
+                    if (res.ok) {
+                        return res.json();
+                    } else {
+                        throw new Error('Gagal mengambil data');
                     }
-                } catch (error) {
-                    console.log('Error fetching from API:', error);
-                }
-            }
+                }).catch(() => null)
+            ));
 
-            // Tampilkan hasil
-            if (apiResponse) {
-                const status = apiResponse.active ? 'Active' : 'Inactive';
+            const response = apiResponses.find(res => res); // Ambil response pertama yang valid
+
+            if (response) {
                 resultDiv.innerHTML = `
                     <p><strong>Input:</strong> ${proxyInput}</p>
-                    <p><strong>IP:</strong> ${ip}</p>
-                    <p><strong>Port:</strong> ${port}</p>
-                    <p><strong>ASN:</strong> ${apiResponse.asn || 'N/A'}</p>
-                    <p><strong>ISP:</strong> ${apiResponse.isp || 'N/A'}</p>
-                    <p><strong>ORG:</strong> ${apiResponse.org || 'N/A'}</p>
-                    <p><strong>Country:</strong> ${apiResponse.country || 'N/A'}</p>
-                    <p><strong>Status ProxyIP:</strong> <span class="${status === 'Active' ? 'active' : 'inactive'}">${status}</span></p>
-                    <p><strong>Warp:</strong> ${apiResponse.warp || 'off'}</p>
+                    <p><strong>IP:</strong> ${response.ip || ip}</p>
+                    <p><strong>ASN:</strong> ${response.asn || 'N/A'}</p>
+                    <p><strong>ISP:</strong> ${response.isp || 'N/A'}</p>
+                    <p><strong>ORG:</strong> ${response.org || 'N/A'}</p>
+                    <p><strong>Country:</strong> ${response.country || 'N/A'}</p>
+                    <p><strong>Status ProxyIP:</strong> <span class="${response.active ? 'status-active' : 'status-inactive'}">${response.active ? 'Active' : 'Inactive'}</span></p>
+                    <p><strong>Warp:</strong> ${response.warp || 'off'}</p>
                 `;
             } else {
-                resultDiv.innerHTML = '<p style="color: red;">Failed to check proxy status. Please try again later.</p>';
+                resultDiv.innerHTML = '<p style="color: red;">Gagal memeriksa status proxy. Coba lagi nanti.</p>';
             }
+
+            resultDiv.style.display = 'block'; // Tampilkan hasil
         }
     </script>
 
