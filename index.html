@@ -97,6 +97,22 @@
                 const ipInfoResponse = await fetch(apiUrlIpInfo);
                 const ipInfoData = await ipInfoResponse.json();
 
+                // Ambil data dari proxyip.edtunnel.best
+                const apiUrlEdTunnel = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+                const edTunnelResponse = await fetch(apiUrlEdTunnel);
+                const edTunnelData = await edTunnelResponse.json();
+
+                // Ambil data dari cfport-1-n2942152.deta.app
+                const apiUrlDeta = `https://cfport-1-n2942152.deta.app/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+                const detaResponse = await fetch(apiUrlDeta);
+                const detaData = await detaResponse.json();
+
+                // Ambil data dari p01--boiling-frame--kw6dd7bjv2nr.code.run
+                const apiUrlBoilingFrame = `https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+                const boilingFrameResponse = await fetch(apiUrlBoilingFrame);
+                const boilingFrameData = await boilingFrameResponse.json();
+
+                // Tampilkan hasil
                 const status = geoData.ip ? 'True' : 'False';
                 const org = geoData.organization || 'N/A';
                 const city = geoData.city || 'N/A';
@@ -104,6 +120,11 @@
                 const countryIso = geoData.country_code2 || 'N/A';
                 const state = geoData.state_prov || 'N/A';
                 const asn = ipInfoData.org || 'N/A';
+
+                // Data dari API lain
+                const edtunnelStatus = edTunnelData.status || 'N/A';
+                const detaStatus = detaData.status || 'N/A';
+                const boilingFrameStatus = boilingFrameData.status || 'N/A';
 
                 resultContainer.innerHTML = `
                     <p><span>IP:</span> ${ip}</p>
@@ -114,6 +135,9 @@
                     <p><span>ASN:</span> ${asn}</p>
                     <p><span>ORGANIZATION:</span> ${org}</p>
                     <p><span>Status Proxy:</span> ${status}</p>
+                    <p><span>EDTunnel Status:</span> ${edtunnelStatus}</p>
+                    <p><span>Deta Status:</span> ${detaStatus}</p>
+                    <p><span>Boiling Frame Status:</span> ${boilingFrameStatus}</p>
                 `;
             } catch (error) {
                 resultContainer.innerHTML = `
