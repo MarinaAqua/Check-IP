@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek IP Proxy</title>
+    <title>Cek Status IP Proxy</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
@@ -40,23 +40,18 @@
         button:hover {
             background-color: #4cae4c;
         }
-        .result-container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 20px;
+        .result {
             margin-top: 20px;
-            max-width: 400px;
-            margin: 20px auto;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .result-container p {
-            margin: 8px 0;
+        .result p {
             font-size: 16px;
+            margin: 8px 0;
         }
-        .result-container span {
-            font-weight: bold;
-            display: inline-block;
-            width: 150px;
+        .result strong {
+            color: #333;
         }
     </style>
 </head>
@@ -68,54 +63,40 @@
         <button type="submit">Cek</button>
     </form>
 
-    <div id="resultContainer" class="result-container"></div>
+    <div class="result" id="result"></div>
 
     <script>
         document.getElementById('proxyForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const ipPort = document.getElementById('ipPort').value;
             const [ip, port] = ipPort.split(':');
-            const resultContainer = document.getElementById('resultContainer');
-            resultContainer.innerHTML = '';
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
 
             if (!ip || !port) {
                 alert('Format IP:Port tidak valid.');
                 return;
             }
 
-            // Fungsi untuk handle request API dengan error handling
-            async function fetchData(apiUrl) {
-                try {
-                    const response = await fetch(apiUrl);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    return data;
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                    return { status: 'Error', message: error.message };
-                }
+            try {
+                // Mengambil informasi dari API edtunnel.best
+                const apiUrlEDTunnel = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+                const response = await fetch(apiUrlEDTunnel);
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <p><strong>IP:</strong> ${data.ip}</p>
+                    <p><strong>ASN:</strong> ${data.asn}</p>
+                    <p><strong>Organisation:</strong> ${data.asOrganization}</p>
+                    <p><strong>City:</strong> ${data.city}</p>
+                    <p><strong>Country:</strong> ${data.country}</p>
+                    <p><strong>Latitude:</strong> ${data.latitude}</p>
+                    <p><strong>Longitude:</strong> ${data.longitude}</p>
+                    <p><strong>Proxy:</strong> ${data.proxy ? 'Yes' : 'No'}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
             }
-
-            // API URLs
-            const apiUrlEdTunnel = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-            const apiUrlDeta = `https://cfport-1-n2942152.deta.app/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-            const apiUrlBoilingFrame = `https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-
-            // Fetch data dari ketiga API
-            const edTunnelData = await fetchData(apiUrlEdTunnel);
-            const detaData = await fetchData(apiUrlDeta);
-            const boilingFrameData = await fetchData(apiUrlBoilingFrame);
-
-            // Menampilkan hasil
-            resultContainer.innerHTML = `
-                <p><span>IP:</span> ${ip}</p>
-                <p><span>Port:</span> ${port}</p>
-                <p><span>EDTunnel Status:</span> ${edTunnelData.status || edTunnelData.message}</p>
-                <p><span>Deta Status:</span> ${detaData.status || detaData.message}</p>
-                <p><span>Boiling Frame Status:</span> ${boilingFrameData.status || boilingFrameData.message}</p>
-            `;
         });
     </script>
 </body>
