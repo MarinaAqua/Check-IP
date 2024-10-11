@@ -21,10 +21,6 @@
             justify-content: center;
             margin-bottom: 20px;
         }
-        label {
-            margin-right: 10px;
-            font-weight: 500;
-        }
         input {
             padding: 10px;
             margin-right: 10px;
@@ -90,11 +86,7 @@
     </table>
 
     <script>
-        const apiUrls = [
-            "https://proxyip.edtunnel.best/api?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true",
-            "https://cfport-1-n2942152.deta.app/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true",
-            "https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true"
-        ];
+        const apiKey = '02b4a2362c5147ec9996da7d6ceccd4c'; // Ganti dengan kunci API Anda
 
         document.getElementById('proxyForm').addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -108,37 +100,36 @@
                 return;
             }
 
-            for (const apiUrl of apiUrls) {
-                const url = apiUrl.replace('{ip}', ip).replace('{port}', port);
-                try {
-                    const response = await fetch(url);
-                    const data = await response.json();
+            try {
+                // Mengambil informasi dari API ipgeolocation.io
+                const apiUrl = `https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}&ip=${ip}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
 
-                    const status = data.success ? 'True' : 'False';
-                    const org = data.data?.org || 'N/A';
-                    const city = data.data?.city || 'N/A';
-                    const country = data.data?.country || 'N/A';
+                const status = data.ip ? 'True' : 'False';
+                const org = data.organization || 'N/A';
+                const city = data.city || 'N/A';
+                const country = data.country_name || 'N/A';
 
-                    resultTableBody.innerHTML += `
-                        <tr>
-                            <td>${ip}</td>
-                            <td>${port}</td>
-                            <td>${org}</td>
-                            <td>${city}</td>
-                            <td>${country}</td>
-                            <td>${status}</td>
-                        </tr>
-                    `;
-                } catch (error) {
-                    resultTableBody.innerHTML += `
-                        <tr>
-                            <td>${ip}</td>
-                            <td>${port}</td>
-                            <td colspan="4">Error: ${error.message}</td>
-                            <td>False</td>
-                        </tr>
-                    `;
-                }
+                resultTableBody.innerHTML += `
+                    <tr>
+                        <td>${ip}</td>
+                        <td>${port}</td>
+                        <td>${org}</td>
+                        <td>${city}</td>
+                        <td>${country}</td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+            } catch (error) {
+                resultTableBody.innerHTML += `
+                    <tr>
+                        <td>${ip}</td>
+                        <td>${port}</td>
+                        <td colspan="4">Error: ${error.message}</td>
+                        <td>False</td>
+                    </tr>
+                `;
             }
         });
     </script>
