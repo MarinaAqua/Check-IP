@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengecekan IP Proxy ISP</title>
+    <title>Pengecekan IP Proxy</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,7 +54,7 @@
     <script>
         async function checkProxy() {
             const input = document.getElementById("ipInput").value.trim();
-            const [ip, port = '80'] = input.split(':'); // Default port to 80
+            const [ip, port = '443'] = input.split(':'); // Default port to 443
 
             // Validasi IP
             const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){2}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -65,41 +65,36 @@
 
             // Cek status proxy
             const proxyApiUrl = `https://proxyip.edtunnel.best/api/proxy?ip=${ip}&port=${port}`;
-            let proxyStatus = 'Mati';
+            let resultContent = '';
             try {
                 const proxyResponse = await fetch(proxyApiUrl);
+                if (!proxyResponse.ok) throw new Error('Gagal menghubungi API proxy');
                 const proxyData = await proxyResponse.json();
-                proxyStatus = proxyData.active ? 'Aktif' : 'Mati';
-            } catch {
-                proxyStatus = 'Mati';
-            }
 
-            // Dapatkan informasi dari ip-api.com
-            const apiUrl = `https://ip-api.com/json/${ip}`;
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error("IP tidak valid atau tidak terhubung");
-                const data = await response.json();
-
-                const result = `
-                    <strong>Informasi IP:</strong><br>
-                    IP: ${data.query}<br>
-                    ISP: ${data.isp}<br>
-                    Lokasi: ${data.city}, ${data.country}<br>
-                    Latitude: ${data.lat}<br>
-                    Longitude: ${data.lon}<br>
-                    Status Proxy: ${proxyStatus}
+                resultContent = `
+                    <strong>Informasi Proxy:</strong><br>
+                    IP: ${proxyData.ip}<br>
+                    Lokasi: ${proxyData.location || 'Tidak tersedia'}<br>
+                    Data Center: ${proxyData.data_center || 'Tidak tersedia'}<br>
+                    Port: ${proxyData.origin || port}<br>
+                    Proxy IP: ${proxyData.proxy ? 'Aktif' : 'Mati'}<br>
+                    Reverse: ${proxyData.reverse ? 'Ya' : 'Tidak'}<br>
+                    Warp: ${proxyData.warp ? 'Aktif' : 'Nonaktif'}<br>
+                    ASN: ${proxyData.asn || 'Tidak tersedia'}<br>
+                    Organisasi: ${proxyData.organization || 'Tidak tersedia'}<br>
                 `;
-                document.getElementById("result").innerHTML = result;
             } catch (error) {
-                document.getElementById("result").innerText = `Error: ${error.message}`;
+                resultContent = `Error: ${error.message}`;
             }
+
+            // Tampilkan hasil
+            document.getElementById("result").innerHTML = resultContent;
         }
     </script>
 </head>
 <body>
     <div class="container">
-        <h1>Pengecekan IP Proxy ISP</h1>
+        <h1>Pengecekan IP Proxy</h1>
         <input type="text" id="ipInput" placeholder="Masukkan IP:Port" required>
         <button onclick="checkProxy()">Cek Status</button>
         <div id="result"></div>
