@@ -71,7 +71,8 @@
     <div id="resultContainer" class="result-container"></div>
 
     <script>
-        const apiKey = '02b4a2362c5147ec9996da7d6ceccd4c'; // Ganti dengan kunci API Anda
+        const ipGeolocationApiKey = '02b4a2362c5147ec9996da7d6ceccd4c'; // Ganti dengan kunci API ipgeolocation.io Anda
+        const ipInfoToken = 'acbb42696f81c4'; // Ganti dengan kunci API ipinfo.io Anda
 
         document.getElementById('proxyForm').addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -86,17 +87,23 @@
             }
 
             try {
-                const apiUrl = `https://api.ipgeolocation.io/ipgeo?apiKey=${apiKey}&ip=${ip}`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+                // Ambil data dari ipgeolocation.io
+                const apiUrlGeolocation = `https://api.ipgeolocation.io/ipgeo?apiKey=${ipGeolocationApiKey}&ip=${ip}`;
+                const geoResponse = await fetch(apiUrlGeolocation);
+                const geoData = await geoResponse.json();
 
-                const status = data.ip ? 'True' : 'False';
-                const org = data.organization || 'N/A';
-                const city = data.city || 'N/A';
-                const country = data.country_name || 'N/A';
-                const countryIso = data.country_code2 || 'N/A';
-                const state = data.state_prov || 'N/A';
-                const asn = data.asn || 'N/A';
+                // Ambil data ASN dari ipinfo.io
+                const apiUrlIpInfo = `https://ipinfo.io/${ip}?token=${ipInfoToken}`;
+                const ipInfoResponse = await fetch(apiUrlIpInfo);
+                const ipInfoData = await ipInfoResponse.json();
+
+                const status = geoData.ip ? 'True' : 'False';
+                const org = geoData.organization || 'N/A';
+                const city = geoData.city || 'N/A';
+                const country = geoData.country_name || 'N/A';
+                const countryIso = geoData.country_code2 || 'N/A';
+                const state = geoData.state_prov || 'N/A';
+                const asn = ipInfoData.org || 'N/A';
 
                 resultContainer.innerHTML = `
                     <p><span>IP:</span> ${ip}</p>
