@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
         }
@@ -53,16 +53,24 @@
     </style>
     <script>
         async function checkProxy() {
-            const ip = document.getElementById("ipInput").value;
+            const input = document.getElementById("ipInput").value;
+            const [ip, port] = input.split(':');
+
+            if (!ip || !port) {
+                document.getElementById("result").innerText = 'Masukkan format IP:Port yang valid.';
+                return;
+            }
+
             const url = `https://api.ipgeolocation.io/ipgeo?apiKey=YOUR_API_KEY&ip=${ip}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error("IP tidak valid atau tidak terhubung");
                 const data = await response.json();
-                
+
                 const result = `
                     <strong>Informasi IP:</strong><br>
                     IP: ${data.ip}<br>
+                    Port: ${port}<br>
                     ASN: ${data.asn}<br>
                     ISP: ${data.isp}<br>
                     Domain: ${data.domain || 'Tidak tersedia'}<br>
@@ -84,7 +92,7 @@
 <body>
     <div class="container">
         <h1>Pengecekan IP Proxy ISP</h1>
-        <input type="text" id="ipInput" placeholder="Masukkan IP Proxy">
+        <input type="text" id="ipInput" placeholder="Masukkan IP:Port" required>
         <button onclick="checkProxy()">Cek Status</button>
         <div id="result"></div>
     </div>
