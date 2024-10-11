@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengecekan IP Proxy ISP</title>
+    <title>Cek IP Proxy ISP</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -61,7 +61,7 @@
                 return;
             }
 
-            const url = `https://api.ipgeolocation.io/ipgeo?apiKey=YOUR_API_KEY&ip=${ip}`;
+            const url = `https://api.ipgeolocation.io/ipgeo?apiKey=02b4a2362c5147ec9996da7d6ceccd4c&ip=${ip}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error("IP tidak valid atau tidak terhubung");
