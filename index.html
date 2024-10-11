@@ -60,6 +60,23 @@
             return ipRegex.test(ip);
         }
 
+        async function checkProxy(ip, port) {
+            return new Promise((resolve) => {
+                const proxyUrl = `http://${ip}:${port}`;
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', proxyUrl, true);
+                xhr.timeout = 5000; // Timeout after 5 seconds
+                xhr.onreadystatechange = () => {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                        resolve(xhr.status === 200 ? 'Aktif' : 'Mati');
+                    }
+                };
+                xhr.ontimeout = () => resolve('Mati');
+                xhr.onerror = () => resolve('Mati');
+                xhr.send();
+            });
+        }
+
         async function checkProxyAndASN() {
             const input = document.getElementById("ipInput").value.trim();
             let ip, port;
@@ -82,21 +99,27 @@
             const infoUrl = `https://ipinfo.io/${ip}/json?token=acbb42696f81c4`;
 
             try {
+                // Cek status IP
                 const geoResponse = await fetch(geoUrl);
                 if (!geoResponse.ok) throw new Error("IP tidak valid atau tidak terhubung");
                 const geoData = await geoResponse.json();
 
+                // Cek ASN dan informasi tambahan
                 const infoResponse = await fetch(infoUrl);
                 if (!infoResponse.ok) throw new Error("IP tidak valid untuk ASN");
                 const infoData = await infoResponse.json();
+
+                // Cek status proxy
+                const proxyStatus = await checkProxy(ip, port);
 
                 let result = `
                     <strong>Informasi IP:</strong><br>
                     IP: <span class="success">${geoData.ip}</span><br>
                     Port: <span class="success">${port}</span><br>
+                    Status Proxy: <span class="success">${proxyStatus}</span><br>
                     ASN: <span class="success">${infoData.asn || 'Tidak tersedia'}</span><br>
                     ISP: ${geoData.isp}<br>
-                    Lokasi: ${geoData.city}, ${geoData.country_name}<br>
+                    Lokasi: ${geoData.city || 'Tidak tersedia'}, ${geoData.country_name || 'Tidak tersedia'}<br>
                     Latitude: ${geoData.latitude}<br>
                     Longitude: ${geoData.longitude}<br>
                     Kode Negara: ${geoData.country_code}<br>
