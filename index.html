@@ -1,110 +1,30 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengecekan IP Proxy ISP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        input[type="text"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 10px;
-            background: #e9ecef;
-            border-radius: 4px;
-            line-height: 1.5;
-        }
-    </style>
-    <script>
-        async function checkProxy() {
-            const input = document.getElementById("ipInput").value.trim();
-            const [ip, port = '80'] = input.split(':'); // Default port to 80
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css'>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cf ip remote check(CloudFlare 反代IP检测) - Vite App</title>
+  <meta name="description" content="Check CloudFlare reverse proxy IP and other details." />
+  <meta name="keywords" content="CloudFlare, reverse proxy, IP check" />
+  <meta name="author" content="Your Name" />
+  <meta name="robots" content="index, follow" />
 
-            // Validasi IP
-            const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){2}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-            if (!ipRegex.test(ip)) {
-                document.getElementById("result").innerText = 'Masukkan format IP:Port yang valid.';
-                return;
-            }
 
-            // Cek status proxy
-            const proxyUrl = `http://${ip}:${port}`;
-            let proxyStatus = 'Mati';
-            try {
-                const response = await fetch(proxyUrl, { method: 'GET', mode: 'no-cors' });
-                if (response.ok) {
-                    proxyStatus = 'Aktif';
-                }
-            } catch {
-                proxyStatus = 'Mati';
-            }
+  <!-- Open Graph meta tags for social media sharing -->
+  <meta property="og:title" content="cf ip remote check(CloudFlare 反代IP检测) - Vite App" />
+  <meta property="og:description" content="Check CloudFlare reverse proxy IP and other details." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:title" content="cf ip remote check(CloudFlare 反代IP检测) - Vite App" />
+  <meta name="twitter:description" content="Check CloudFlare reverse proxy IP and other details." />
 
-            // Dapatkan informasi dari ip-api.com
-            const apiUrl = `http://ip-api.com/json/${ip}`;
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error("IP tidak valid atau tidak terhubung");
-                const data = await response.json();
-
-                const result = `
-                    <strong>Informasi IP:</strong><br>
-                    IP: ${data.query}<br>
-                    Port: ${port}<br>
-                    ISP: ${data.isp}<br>
-                    Lokasi: ${data.city}, ${data.country}<br>
-                    Latitude: ${data.lat}<br>
-                    Longitude: ${data.lon}<br>
-                    Status Proxy: ${proxyStatus}
-                `;
-                document.getElementById("result").innerHTML = result;
-            } catch (error) {
-                document.getElementById("result").innerText = `Error: ${error.message}`;
-            }
-        }
-    </script>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Pengecekan IP Proxy ISP</h1>
-        <input type="text" id="ipInput" placeholder="Masukkan IP:Port" required>
-        <button onclick="checkProxy()">Cek Status</button>
-        <div id="result"></div>
-    </div>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>
