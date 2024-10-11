@@ -71,9 +71,6 @@
     <div id="resultContainer" class="result-container"></div>
 
     <script>
-        const ipGeolocationApiKey = '02b4a2362c5147ec9996da7d6ceccd4c'; // Ganti dengan kunci API ipgeolocation.io Anda
-        const ipInfoToken = 'acbb42696f81c4'; // Ganti dengan kunci API ipinfo.io Anda
-
         document.getElementById('proxyForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const ipPort = document.getElementById('ipPort').value;
@@ -86,67 +83,39 @@
                 return;
             }
 
-            try {
-                // Ambil data dari ipgeolocation.io
-                const apiUrlGeolocation = `https://api.ipgeolocation.io/ipgeo?apiKey=${ipGeolocationApiKey}&ip=${ip}`;
-                const geoResponse = await fetch(apiUrlGeolocation);
-                const geoData = await geoResponse.json();
-
-                // Ambil data ASN dari ipinfo.io
-                const apiUrlIpInfo = `https://ipinfo.io/${ip}?token=${ipInfoToken}`;
-                const ipInfoResponse = await fetch(apiUrlIpInfo);
-                const ipInfoData = await ipInfoResponse.json();
-
-                // Ambil data dari proxyip.edtunnel.best
-                const apiUrlEdTunnel = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-                const edTunnelResponse = await fetch(apiUrlEdTunnel);
-                const edTunnelData = await edTunnelResponse.json();
-
-                // Ambil data dari cfport-1-n2942152.deta.app
-                const apiUrlDeta = `https://cfport-1-n2942152.deta.app/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-                const detaResponse = await fetch(apiUrlDeta);
-                const detaData = await detaResponse.json();
-
-                // Ambil data dari p01--boiling-frame--kw6dd7bjv2nr.code.run
-                const apiUrlBoilingFrame = `https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
-                const boilingFrameResponse = await fetch(apiUrlBoilingFrame);
-                const boilingFrameData = await boilingFrameResponse.json();
-
-                // Tampilkan hasil
-                const status = Data.ip ? 'True' : 'False';
-                const org = Data.organization || 'N/A';
-                const city = Data.city || 'N/A';
-                const country = Data.country_name || 'N/A';
-                const countryIso = Data.country_code2 || 'N/A';
-                const state = Data.state_prov || 'N/A';
-                const asn = Data.asn || 'N/A';
-
-                // Data dari API lain
-                const edtunnelStatus = edTunnelData.status || 'N/A';
-                const detaStatus = detaData.status || 'N/A';
-                const boilingFrameStatus = boilingFrameData.status || 'N/A';
-
-                resultContainer.innerHTML = `
-                    <p><span>IP:</span> ${ip}</p>
-                    <p><span>COUNTRY:</span> ${country}</p>
-                    <p><span>COUNTRY ISO:</span> ${countryIso}</p>
-                    <p><span>STATE:</span> ${state}</p>
-                    <p><span>CITY:</span> ${city}</p>
-                    <p><span>ASN:</span> ${asn}</p>
-                    <p><span>ORGANIZATION:</span> ${org}</p>
-                    <p><span>Status Proxy:</span> ${status}</p>
-                    <p><span>EDTunnel Status:</span> ${edtunnelStatus}</p>
-                    <p><span>Deta Status:</span> ${detaStatus}</p>
-                    <p><span>Boiling Frame Status:</span> ${boilingFrameStatus}</p>
-                `;
-            } catch (error) {
-                resultContainer.innerHTML = `
-                    <p><span>IP:</span> ${ip}</p>
-                    <p><span>Port:</span> ${port}</p>
-                    <p class="error">Error: ${error.message}</p>
-                    <p><span>Status Proxy:</span> False</p>
-                `;
+            // Fungsi untuk handle request API dengan error handling
+            async function fetchData(apiUrl) {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    return { status: 'Error', message: error.message };
+                }
             }
+
+            // API URLs
+            const apiUrlEdTunnel = `https://proxyip.edtunnel.best/api?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+            const apiUrlDeta = `https://cfport-1-n2942152.deta.app/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+            const apiUrlBoilingFrame = `https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip=${ip}&host=speed.cloudflare.com&port=${port}&tls=true`;
+
+            // Fetch data dari ketiga API
+            const edTunnelData = await fetchData(apiUrlEdTunnel);
+            const detaData = await fetchData(apiUrlDeta);
+            const boilingFrameData = await fetchData(apiUrlBoilingFrame);
+
+            // Menampilkan hasil
+            resultContainer.innerHTML = `
+                <p><span>IP:</span> ${ip}</p>
+                <p><span>Port:</span> ${port}</p>
+                <p><span>EDTunnel Status:</span> ${edTunnelData.status || edTunnelData.message}</p>
+                <p><span>Deta Status:</span> ${detaData.status || detaData.message}</p>
+                <p><span>Boiling Frame Status:</span> ${boilingFrameData.status || boilingFrameData.message}</p>
+            `;
         });
     </script>
 </body>
