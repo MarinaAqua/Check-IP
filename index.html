@@ -4,46 +4,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cek IP Proxy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; }
-        .result { margin-top: 20px; }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        label {
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        input {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #5cb85c;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #5cb85c;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
     </style>
 </head>
 <body>
     <h1>Cek Status IP Proxy</h1>
     <form id="proxyForm">
-        <label for="ip">IP Proxy:</label>
-        <input type="text" id="ip" required>
-        <label for="port">Port:</label>
-        <input type="number" id="port" required>
+        <label for="ipPort">IP:Port:</label>
+        <input type="text" id="ipPort" placeholder="Masukkan IP:Port" required>
         <button type="submit">Cek</button>
     </form>
 
-    <div class="result" id="result"></div>
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>IP</th>
+                <th>Port</th>
+                <th>Organisasi</th>
+                <th>Kota</th>
+                <th>Negara</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
     <script>
         const apiUrls = [
-            "https://cors-anywhere.herokuapp.com/https://proxyip.edtunnel.best/api?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true",
-            "https://cors-anywhere.herokuapp.com/https://cfport-1-n2942152.deta.app/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true",
-            "https://cors-anywhere.herokuapp.com/https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true"
+            "https://proxyip.edtunnel.best/api?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true",
+            "https://cfport-1-n2942152.deta.app/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true",
+            "https://p01--boiling-frame--kw6dd7bjv2nr.code.run/check?ip={ip}&host=speed.cloudflare.com&port={port}&tls=true"
         ];
 
         document.getElementById('proxyForm').addEventListener('submit', async (event) => {
             event.preventDefault();
-            const ip = document.getElementById('ip').value;
-            const port = document.getElementById('port').value;
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
+            const ipPort = document.getElementById('ipPort').value;
+            const [ip, port] = ipPort.split(':');
+            const resultTableBody = document.getElementById('resultTable').querySelector('tbody');
+            resultTableBody.innerHTML = '';
+
+            if (!ip || !port) {
+                alert('Format IP:Port tidak valid.');
+                return;
+            }
 
             for (const apiUrl of apiUrls) {
                 const url = apiUrl.replace('{ip}', ip).replace('{port}', port);
                 try {
                     const response = await fetch(url);
                     const data = await response.json();
-                    const status = data.success ? 'Aktif' : 'Mati';
-                    resultDiv.innerHTML += `<p>API: ${url} - Status: ${status}</p>`;
+
+                    const status = data.success ? 'True' : 'False';
+                    const org = data.data?.org || 'N/A';
+                    const city = data.data?.city || 'N/A';
+                    const country = data.data?.country || 'N/A';
+
+                    resultTableBody.innerHTML += `
+                        <tr>
+                            <td>${ip}</td>
+                            <td>${port}</td>
+                            <td>${org}</td>
+                            <td>${city}</td>
+                            <td>${country}</td>
+                            <td>${status}</td>
+                        </tr>
+                    `;
                 } catch (error) {
-                    resultDiv.innerHTML += `<p>API: ${url} - Error: ${error.message}</p>`;
+                    resultTableBody.innerHTML += `
+                        <tr>
+                            <td>${ip}</td>
+                            <td>${port}</td>
+                            <td colspan="4">Error: ${error.message}</td>
+                            <td>False</td>
+                        </tr>
+                    `;
                 }
             }
         });
