@@ -3,111 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengecekan IP Proxy</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Pengecekan IP Proxy ISP</title>
     <style>
         body {
-            background-color: #f4f4f9;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
             padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
         #result {
             margin-top: 20px;
-            padding: 15px;
+            padding: 10px;
             background: #e9ecef;
             border-radius: 4px;
             line-height: 1.5;
-            border-left: 4px solid #007BFF;
-        }
-        .error {
-            color: red;
-        }
-        .success {
-            color: green;
-        }
-        .loading {
-            display: none;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="text-center">Pengecekan IP Proxy</h1>
-        <div class="form-group">
-            <input type="text" class="form-control" id="ipInput" placeholder="Masukkan IP atau IP:Port" required>
-            <button class="btn btn-primary btn-block mt-2" onclick="checkProxyAndInfo()">Cek Status IP Proxy</button>
-        </div>
-        <div id="loading" class="loading text-center">
-            <p>Memproses...</p>
-        </div>
-        <div id="result"></div>
-    </div>
-
     <script>
-        function showLoading() {
-            document.getElementById("loading").style.display = 'block';
-        }
-
-        function hideLoading() {
-            document.getElementById("loading").style.display = 'none';
-        }
-
-        async function checkProxy(ip, port) {
-            const proxyUrl = `http://${ip}:${port}`;
-            try {
-                const response = await fetch(proxyUrl, { method: 'GET', mode: 'no-cors' });
-                return response.ok ? 'Aktif' : 'Mati';
-            } catch {
-                return 'Mati';
-            }
-        }
-
-        async function checkProxyAndInfo() {
+        async function checkProxy() {
             const input = document.getElementById("ipInput").value.trim();
-            let ip, port;
+            const [ip, port = '443'] = input.split(':'); // Default port to 443 if not provided
 
-            if (input.includes(':')) {
-                [ip, port] = input.split(':');
-            } else {
-                ip = input;
-                port = 443; // Default port
+            // Validasi IP
+            const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){2}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            if (!ipRegex.test(ip)) {
+                document.getElementById("result").innerText = 'Masukkan format IP:Port yang valid.';
+                return;
             }
 
-            showLoading();
-
-            const geoUrl = `https://api.ipgeolocation.io/ipgeo?apiKey=02b4a2362c5147ec9996da7d6ceccd4c&ip=${ip}`;
-            const infoUrl = `https://ipinfo.io/${ip}/json?token=acbb42696f81c4`;
-
+            const url = `https://api.ipgeolocation.io/ipgeo?apiKey=02b4a2362c5147ec9996da7d6ceccd4c&ip=${ip}`;
             try {
-                const geoResponse = await fetch(geoUrl);
-                if (!geoResponse.ok) throw new Error("IP tidak valid atau tidak terhubung");
-                const geoData = await geoResponse.json();
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("IP tidak valid atau tidak terhubung");
+                const data = await response.json();
 
-                const infoResponse = await fetch(infoUrl);
-                if (!infoResponse.ok) throw new Error("IP tidak valid untuk ASN");
-                const infoData = await infoResponse.json();
-
-                const proxyStatus = await checkProxy(ip, port);
-
-                let result = `
+                const result = `
                     <strong>Informasi IP:</strong><br>
-                    IP: <span class="success">${geoData.ip}</span><br>
-                    Port: <span class="success">${port}</span><br>
-                    Status Proxy: <span class="success">${proxyStatus}</span><br>
-                    ASN: <span class="success">${infoData.asn || 'Tidak tersedia'}</span><br>
-                    ISP: ${geoData.isp}<br>
-                    Lokasi: ${geoData.city || 'Tidak tersedia'}, ${geoData.country_name || 'Tidak tersedia'}<br>
-                    Latitude: ${geoData.latitude}<br>
-                    Longitude: ${geoData.longitude}<br>
-                    Kode Negara: ${geoData.country_code}<br>
+                    IP: ${data.ip}<br>
+                    Port: ${port}<br>
+                    ASN: ${data.asn || 'Tidak tersedia'}<br>
+                    ISP: ${data.isp}<br>
+                    Domain: ${data.domain || 'Tidak tersedia'}<br>
+                    Lokasi: ${data.city || 'Tidak tersedia'}, ${data.country_name || 'Tidak tersedia'}<br>
+                    Latitude: ${data.latitude}<br>
+                    Longitude: ${data.longitude}<br>
+                    Kode Negara: ${data.country_code}<br>
+                    Waktu Respons: ${data.response_time || 'Tidak tersedia'}<br>
+                    Jenis Koneksi: ${data.connection_type || 'Tidak tersedia'}<br>
+                    Status: ${data.isp ? 'Aktif' : 'Mati'}
                 `;
-
                 document.getElementById("result").innerHTML = result;
             } catch (error) {
-                document.getElementById("result").innerHTML = `<span class="error">Error: ${error.message}</span>`;
-            } finally {
-                hideLoading();
+                document.getElementById("result").innerText = `Error: ${error.message}`;
             }
         }
     </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Pengecekan IP Proxy ISP</h1>
+        <input type="text" id="ipInput" placeholder="Masukkan IP:Port" required>
+        <button onclick="checkProxy()">Cek Status</button>
+        <div id="result"></div>
+    </div>
 </body>
 </html>
